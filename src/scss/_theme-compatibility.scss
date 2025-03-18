@@ -1,0 +1,85 @@
+// Estilos específicos para temas claro y oscuro
+
+// Estilos para tema claro
+html[data-coreui-theme="light"] {
+  // Colores de texto
+  body {
+    color: #333333 !important;
+    background-color: #f8f9fa !important;
+  }
+
+  .app {
+    background-color: #f8f9fa !important;
+  }
+
+  // Navegación y header
+  .nav-link {
+    color: #333333 !important;
+
+    &.active {
+      color: #321fdb !important;
+    }
+  }
+
+  // Header
+  .header {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+  }
+
+  // Breadcrumb
+  .breadcrumb {
+    color: #333333 !important;
+
+    .breadcrumb-item {
+      color: #333333 !important;
+
+      &.active {
+        color: #6c757d !important;
+      }
+    }
+  }
+
+  // Tarjetas
+  .card {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+
+    .card-header {
+      background-color: rgba(0, 0, 0, 0.03) !important;
+      color: #333333 !important;
+    }
+
+    .card-body {
+      color: #333333 !important;
+    }
+  }
+
+  // Texto de énfasis
+  .text-medium-emphasis {
+    color: #6c757d !important;
+  }
+
+  // Widgets
+  .widget-stats-f {
+    color: #333333 !important;
+  }
+
+  // Botones
+  .btn-link {
+    color: #321fdb !important;
+  }
+
+  // Tabla
+  table {
+    color: #333333 !important;
+  }
+
+  // Footer
+  .footer {
+    background-color: #f8f9fa !important;
+    color: #333333 !important;
+  }
+}
+
+// No modificamos estilos para tema oscuro porque ya funciona correctamente

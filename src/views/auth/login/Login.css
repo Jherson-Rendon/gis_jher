@@ -1,0 +1,75 @@
+/* src/views/auth/login/Login.css */
+
+/* Estilos para el fondo y la tarjeta de login */
+.login-page {
+  background-color: #1e1e2f !important;
+}
+
+.login-card {
+  background-color: #27293d !important;
+  border: none !important;
+}
+
+/* Estilos para los inputs y sus contenedores */
+.form-input-dark {
+  background-color: #2b3553 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 0 4px 4px 0 !important;
+}
+
+.form-input-dark::placeholder {
+  color: #9a9a9a !important;
+}
+
+/* Mantener el estilo oscuro en todos los estados */
+.form-input-dark:focus,
+.form-input-dark:active,
+.form-input-dark:hover {
+  background-color: #2b3553 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Estilo para el icono del input */
+.input-group-text-dark {
+  background-color: #2b3553 !important;
+  color: #9a9a9a !important;
+  border: none !important;
+  border-radius: 4px 0 0 4px !important;
+}
+
+/* Estilos para los textos */
+.text-white {
+  color: #ffffff !important;
+}
+
+.text-medium-emphasis {
+  color: #9a9a9a !important;
+}
+
+/* Estilo para el enlace de olvidé mi contraseña */
+.forgot-password-link {
+  color: #9a9a9a !important;
+}
+
+.forgot-password-link:hover {
+  color: #ffffff !important;
+}
+
+/* Estilo para el botón de registro */
+.register-button {
+  background-color: transparent !important;
+  border: 1px solid #ffffff !important;
+}
+
+.register-button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Aplicar estilos globales para el tema oscuro */
+body.dark-theme {
+  background-color: #1e1e2f !important;
+}

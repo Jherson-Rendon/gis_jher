@@ -1,0 +1,100 @@
+// Estilos para el sidebar en tema claro
+html[data-coreui-theme="light"] {
+  // Sidebar principal
+  .sidebar {
+    background-color: #f8f9fa !important;
+    color: #333333 !important;
+
+    .simplebar-content {
+      background-color: #f8f9fa !important;
+    }
+
+    // Logo y marca
+    .sidebar-brand {
+      background-color: #f8f9fa !important;
+      color: #333333 !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    // Links de navegación
+    .nav-link {
+      color: #333333 !important;
+
+      &.active {
+        color: #321fdb !important;
+        background-color: rgba(50, 31, 219, 0.1) !important;
+      }
+
+      &:hover {
+        color: #321fdb !important;
+        background-color: rgba(50, 31, 219, 0.05) !important;
+      }
+
+      // Iconos de navegación
+      .nav-icon {
+        color: #768192 !important;
+      }
+    }
+
+    // Grupos de navegación
+    .nav-group {
+      &.show {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+
+      .nav-group-toggle {
+        color: #333333 !important;
+      }
+
+      .nav-group-items {
+        background-color: rgba(0, 0, 0, 0.02) !important;
+
+        .nav-link {
+          color: #333333 !important;
+        }
+      }
+    }
+
+    // Textos y subtítulos
+    .nav-title {
+      color: #888888 !important;
+    }
+
+    // Botón de toggle del sidebar
+    .sidebar-toggler {
+      background-color: #f8f9fa !important;
+      border-color: #d8dbe0 !important;
+      color: #333333 !important;
+
+      &::before {
+        background-color: #333333 !important;
+      }
+    }
+  }
+
+  // Corregir colores para iconos en el sidebar
+  .sidebar .nav-icon {
+    color: #768192 !important;
+  }
+
+  // Asegurar que el texto sea oscuro en el sidebar de tema claro
+  .sidebar .nav-item {
+    color: #333333 !important;
+  }
+}
+
+// Mantener el tema oscuro del sidebar como está
+html[data-coreui-theme="dark"] {
+  .sidebar {
+    background-color: var(--cui-dark) !important;
+    color: #fff !important;
+
+    .nav-link {
+      color: #fff !important;
+
+      &.active {
+        color: #fff !important;
+      }
+    }
+  }
+}

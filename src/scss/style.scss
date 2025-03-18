@@ -1,0 +1,43 @@
+// If you want to override variables do it here
+@import "variables";
+
+// Import styles
+@import "@coreui/coreui/scss/coreui";
+@import "@coreui/chartjs/scss/coreui-chartjs";
+
+// Vendors
+@import "vendors/simplebar";
+
+// Custom styles for this theme
+@import "theme";
+
+// If you want to add custom CSS you can put it here
+@import "custom";
+
+// Importar compatibilidad de temas
+@import "theme-compatibility";
+
+
+// Importar estilos para tema claro/oscuro
+@import "theme-colors";
+
+
+// Importar estilos para el sidebar
+@import 'sidebar-themes';
+
+// Mantener los estilos forzados para fondo oscuro
+body {
+  background-color: var(--cui-dark);
+}
+
+.app {
+  background-color: var(--cui-dark);
+}
+
+// Estos estilos solo se aplican cuando está en tema claro
+.theme-light body, .theme-light .app {
+  background-color: white !important;
+}
+
+
+

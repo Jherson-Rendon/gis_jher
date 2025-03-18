@@ -1,0 +1,128 @@
+// Estilos para tema claro
+html[data-coreui-theme="light"] {
+  // Colores de texto generales
+  body {
+    color: #333 !important;
+  }
+
+  // Navegación principal
+  .nav-link,
+  .dropdown-toggle,
+  .dropdown-item,
+  .nav-item,
+  .header-toggler,
+  .breadcrumb-item,
+  .card-title,
+  .card-header,
+  .card-body {
+    color: #333 !important;
+  }
+
+  // Sidebar permanece con texto claro
+  .sidebar {
+    .nav-link,
+    .nav-group-toggle,
+    .nav-icon {
+      color: white !important;
+    }
+  }
+
+  // Headers de cards
+  .card-header {
+    background-color: #f8f9fa !important;
+  }
+
+  // Body de cards
+  .card-body {
+    background-color: white !important;
+  }
+
+  // Tablas
+  table {
+    color: #333 !important;
+  }
+
+  // Labels de forms
+  .form-label {
+    color: #333 !important;
+  }
+
+  // Widget stats
+  .widget-stats-f {
+    .card-body {
+      color: white !important;
+    }
+  }
+
+  // Header y footer
+  .header, .footer {
+    background-color: #fff !important;
+  }
+
+  .footer {
+    color: #333 !important;
+  }
+}
+// Añadir a src/scss/_theme-colors.scss o crear un nuevo archivo
+
+// Estilos para el Sidebar en tema claro
+html[data-coreui-theme="light"] {
+  // Cambiar el color de fondo y texto del sidebar
+  .sidebar {
+    background-color: #f8f9fa !important;
+
+    .nav-link {
+      color: #333 !important;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+
+      &.active {
+        background-color: #321fdb !important;
+        color: white !important;
+      }
+    }
+
+    .nav-icon {
+      color: #333 !important;
+    }
+
+    .nav-group-toggle {
+      color: #333 !important;
+    }
+
+    .nav-group.show {
+      background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .nav-group-items {
+      .nav-link {
+        color: #333 !important;
+
+        &.active {
+          color: white !important;
+        }
+      }
+    }
+
+    // Estilos para el brand del sidebar
+    .sidebar-brand {
+      background-color: #f8f9fa !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    // Estilos para el toggler
+    .sidebar-toggler {
+      background-color: transparent !important;
+      border-color: rgba(0, 0, 0, 0.1) !important;
+
+      &::before {
+        background-color: #333 !important;
+      }
+    }
+  }
+}
+
+// El tema oscuro ya funciona bien, no necesita cambios
+

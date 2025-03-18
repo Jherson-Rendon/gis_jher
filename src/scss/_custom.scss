@@ -1,0 +1,112 @@
+// src/scss/_custom.scss
+
+// Variables de colores
+:root {
+  --sidebar-light-bg: #fff;
+  --sidebar-light-color: #4f5d73;
+  --sidebar-dark-bg: #3c4b64;
+  --sidebar-dark-color: #fff;
+}
+
+// Estilos base para el sidebar
+.sidebar {
+  transition: background-color 0.3s ease;
+}
+
+// Tema Claro
+html[data-coreui-theme="light"] {
+  .sidebar {
+    background-color: var(--sidebar-light-bg) !important;
+    color: var(--sidebar-light-color) !important;
+
+    .sidebar-brand,
+    .sidebar-header,
+    .sidebar-nav {
+      background-color: var(--sidebar-light-bg) !important;
+    }
+
+    .nav-link {
+      color: var(--sidebar-light-color) !important;
+
+      &:hover {
+        background-color: #ebedef !important;
+      }
+
+      &.active {
+        background-color: #321fdb !important;
+        color: #fff !important;
+      }
+    }
+
+    .nav-group {
+      background-color: var(--sidebar-light-bg) !important;
+
+      &.show {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+    }
+
+    .nav-group-toggle {
+      color: var(--sidebar-light-color) !important;
+    }
+
+    .nav-icon {
+      color: #768192 !important;
+    }
+
+    .sidebar-toggler {
+      background-color: var(--sidebar-light-bg) !important;
+      border-color: #d8dbe0 !important;
+    }
+  }
+}
+
+// Tema Oscuro
+html[data-coreui-theme="dark"] {
+  .sidebar {
+    background-color: var(--sidebar-dark-bg) !important;
+    color: var(--sidebar-dark-color) !important;
+
+    .sidebar-brand,
+    .sidebar-header,
+    .sidebar-nav {
+      background-color: var(--sidebar-dark-bg) !important;
+    }
+
+    .nav-link {
+      color: var(--sidebar-dark-color) !important;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+      }
+
+      &.active {
+        background-color: #321fdb !important;
+        color: #fff !important;
+      }
+    }
+
+    .nav-group {
+      background-color: var(--sidebar-dark-bg) !important;
+
+      &.show {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+      }
+    }
+
+    .nav-group-toggle {
+      color: var(--sidebar-dark-color) !important;
+    }
+
+    .nav-icon {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .sidebar-toggler {
+      background-color: var(--sidebar-dark-bg) !important;
+      border-color: #374151 !important;
+    }
+  }
+}
+
+// Otros estilos existentes que quieras mantener...

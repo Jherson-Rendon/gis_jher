@@ -1,0 +1,83 @@
+// Estilos para el sidebar en tema claro y oscuro
+
+// Tema claro para el sidebar
+html[data-coreui-theme="light"] {
+  // Aplicar fondo claro al sidebar y sus componentes
+  .sidebar[data-coreui-color-scheme="light"] {
+    // Fondo principal del sidebar
+    background-color: #fff !important;
+    color: #333 !important;
+
+    // Brand del sidebar
+    .sidebar-brand {
+      background-color: #f8f9fa !important;
+      color: #333 !important;
+    }
+
+    // Nav items
+    .nav-item {
+      color: #333 !important;
+    }
+
+    // Íconos de navegación
+    .nav-icon {
+      color: #768192 !important;
+    }
+
+    // Links de navegación
+    .nav-link {
+      color: #333 !important;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+
+      &.active {
+        color: #fff !important;
+        background-color: var(--cui-primary) !important;
+
+        .nav-icon {
+          color: #fff !important;
+        }
+      }
+    }
+
+    // Grupos de navegación
+    .nav-group {
+      color: #333 !important;
+
+      &.show {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+
+      .nav-group-toggle {
+        color: #333 !important;
+      }
+
+      .nav-group-items {
+        background-color: rgba(0, 0, 0, 0.02) !important;
+      }
+    }
+
+    // Toggler del sidebar
+    .sidebar-toggler {
+      color: #333 !important;
+
+      &::before {
+        background-color: #333 !important;
+      }
+    }
+
+    // Títulos de navegación
+    .nav-title {
+      color: #6c757d !important;
+    }
+
+    // SimpleBar (scrollbar)
+    .simplebar-content {
+      background-color: #fff !important;
+    }
+  }
+}
+
+// No modificar el tema oscuro que ya funciona bien
