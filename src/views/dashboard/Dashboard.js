@@ -1,94 +1,31 @@
 // src/views/dashboard/Dashboard.js
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-
+import { useModule } from '../../contexts/ModuleContext';
 import {
   CCard,
   CCardBody,
   CCardHeader,
   CCol,
   CRow,
-  CButton,
   CContainer,
-  CWidgetStatsF,
-  CLink,
+  CButton,
+  CCardFooter,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import {
-  cilPeople,
-  cilHospital,
-  cilSettings,
-  cilNotes,
-  cilSpeedometer,
-  cilBriefcase,
-  cilBeaker,
-  cilDollar,
-  cilCalendar,
-} from '@coreui/icons';
+import { cilArrowRight, cilHospital, cilLaptop } from '@coreui/icons';
+import SubsystemCards from './SubsystemCards';
+import { MODULES } from './SubsystemCards';
+import HomeTab from '../../components/HomeTab';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
-  const navigate = useNavigate();
-
-  // Mapeo de módulos a sus nombres, descripciones e iconos
-  const modules = {
-    SUPER_ADMIN: [
-      {
-        title: 'Gestión de IPS',
-        description: 'Administre todas las IPS registradas en el sistema',
-        icon: cilHospital,
-        route: '/super-admin/ips-management',
-        color: 'primary',
-        count: '15',
-        subtitle: 'IPS activas',
-      },
-      {
-        title: 'Usuarios',
-        description: 'Gestione todos los usuarios del sistema',
-        icon: cilPeople,
-        route: '/super-admin/users',
-        color: 'danger',
-        count: '87',
-        subtitle: 'usuarios registrados',
-      },
-      {
-        title: 'Configuración Global',
-        description: 'Configure parámetros globales del sistema',
-        icon: cilSettings,
-        route: '/super-admin/global-settings',
-        color: 'info',
-        count: '3',
-        subtitle: 'configuraciones pendientes',
-      },
-    ],
-    ADMIN: [
-      {
-        title: 'Gestión de Usuarios',
-        description: 'Administre los usuarios de su IPS',
-        icon: cilPeople,
-        route: '/admin-ips/users',
-        color: 'primary',
-        count: '24',
-        subtitle: 'usuarios en su IPS',
-      },
-      {
-        title: 'Configuración de IPS',
-        description: 'Configure los parámetros de su IPS',
-        icon: cilSettings,
-        route: '/admin-ips/settings',
-        color: 'success',
-        count: '5',
-        subtitle: 'módulos configurables',
-      },
-    ],
-    // Puedes agregar más roles aquí según sea necesario
-  };
+  const { activeModule, setActiveModule } = useModule();
 
   // Si el usuario no tiene un rol reconocido, mostrar mensaje de error
-  if (!user || !user.role || !modules[user.role]) {
+  if (!user || !user.role) {
     return (
       <CContainer>
         <CRow className="justify-content-center">
@@ -110,74 +47,88 @@ const Dashboard = () => {
     );
   }
 
-  // Mostrar los módulos disponibles para el rol del usuario
-  return (
-    <CContainer fluid className="p-3">
-      <CCard className="mb-4">
-        <CCardBody>
-          <h2 className="mb-0">Bienvenido, {user.name}</h2>
-          <p className="text-medium-emphasis">
-            Panel de control - {user.role === 'SUPER_ADMIN' ? 'Super Administrador' : 'Administrador'}
-          </p>
-        </CCardBody>
-      </CCard>
+  // Si no hay módulo activo, mostrar pantalla de bienvenida
+  if (!activeModule) {
+    return (
+      <CContainer fluid className="p-2">
+        <CCard className={`mb-4 ${isDark ? 'bg-dark text-white border-dark' : ''}`}>
+          <CCardBody className="text-center py-5">
+            <div className="mb-4">
+              <CIcon icon={cilHospital} size="3xl" className="text-primary mb-3" />
+              <h1 className="display-5 fw-bold mb-3">¡Bienvenido a GisoSalud!</h1>
+              <p className="lead mb-4">
+                Sistema Integral de Gestión para Instituciones de Salud
+              </p>
+              <hr className="my-4" />
+              <p className="mb-4">
+                Para comenzar, seleccione uno de los módulos disponibles en el menú lateral.
+                Cada módulo contiene herramientas específicas para diferentes áreas de su institución.
+              </p>
+            </div>
 
-      <CRow>
-        {modules[user.role].map((module, index) => (
-          <CCol key={index} sm={12} md={6} lg={4} className="mb-4">
-            <CWidgetStatsF
-              className="mb-3 widget-stats-f"
-              color={module.color}
-              icon={<CIcon icon={module.icon} height={24} />}
-              title={module.title}
-              value={module.count}
-              footer={
-                <CLink
-                  className="font-weight-bold font-xs text-medium-emphasis"
-                  onClick={() => navigate(module.route)}
-                  rel="noopener norefferer"
-                  style={{ cursor: 'pointer' }}
-                >
-                  Ver detalles
-                  <CIcon icon={cilSpeedometer} className="float-end" width={16} />
-                </CLink>
-              }
-            >
-              <div className="mt-3 mb-0">
-                <span className="fs-6">{module.subtitle}</span>
-              </div>
-            </CWidgetStatsF>
-          </CCol>
-        ))}
-      </CRow>
+            <CRow className="justify-content-center g-4 mt-3">
+              {Object.keys(MODULES).map(moduleId => {
+                const module = MODULES[moduleId];
+                // Verificar si el usuario tiene acceso a este módulo según su rol
+                const hasAccess = module.subsystems.some(
+                  subsystem => subsystem.roles.includes(user.role)
+                );
 
-      <CRow>
-        <CCol md={12}>
-          <CCard className="mb-4">
-            <CCardHeader>
-              <h4>Accesos rápidos</h4>
-            </CCardHeader>
-            <CCardBody>
-              <CRow>
-                {modules[user.role].map((module, index) => (
-                  <CCol key={index} md={4} className="mb-3">
-                    <CButton
-                      color={module.color}
-                      className="w-100 d-flex align-items-center justify-content-start p-3"
-                      onClick={() => navigate(module.route)}
-                    >
-                      <CIcon icon={module.icon} className="me-3" />
-                      {module.title}
-                    </CButton>
-                  </CCol>
-                ))}
-              </CRow>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
-  );
+                if (hasAccess) {
+                  return (
+                    <CCol xs={12} sm={6} md={4} lg={3} key={moduleId}>
+                      <CCard
+                        color={module.color}
+                        className="h-100 cursor-pointer shadow"
+                        onClick={() => setActiveModule(moduleId)}
+                        style={{
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s',
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        <CCardBody className="d-flex flex-column align-items-center justify-content-center p-4">
+                          <CIcon icon={module.icon} size="3xl" className="mb-3" />
+                          <h4 className="text-center mb-3">{module.title}</h4>
+                          <p className="text-center small">
+                            {module.subsystems.length} subsistemas disponibles
+                          </p>
+                        </CCardBody>
+                        <CCardFooter className="text-center border-0 bg-transparent">
+                          <CButton
+                            color="light"
+                            variant="outline"
+                            className="mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveModule(moduleId);
+                            }}
+                          >
+                            Acceder <CIcon icon={cilArrowRight} className="ms-1" />
+                          </CButton>
+                        </CCardFooter>
+                      </CCard>
+                    </CCol>
+                  );
+                }
+                return null;
+              })}
+            </CRow>
+          </CCardBody>
+          <CCardFooter className={`text-center py-3 ${isDark ? 'bg-dark text-white border-dark' : ''}`}>
+            <p className="mb-0">
+              <CIcon icon={cilLaptop} className="me-2" />
+              Sesión iniciada como <strong>{user.name}</strong> | Rol: <strong>{user.role}</strong>
+            </p>
+          </CCardFooter>
+        </CCard>
+      </CContainer>
+    );
+  }
+
+  // Si hay un módulo activo, mostrar el HomeTab que contiene las tarjetas de subsistemas
+  return <HomeTab />;
 };
 
 export default Dashboard;

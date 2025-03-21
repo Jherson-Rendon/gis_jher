@@ -13,6 +13,68 @@
   transition: background-color 0.3s ease;
 }
 
+// Estilos para las pestañas en modo oscuro
+.tabs-dark {
+  .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+
+    &:hover {
+      color: #fff;
+    }
+
+    &.active {
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: #4f5d73 #4f5d73 transparent;
+    }
+  }
+}
+
+// Estilos para las tarjetas en modo oscuro
+.card {
+  &.bg-dark {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+// Reducir el espacio entre elementos
+.body {
+  padding-top: 0.5rem;
+}
+
+// Mejorar la apariencia de las pestañas
+.tab-navigation {
+  .nav-tabs {
+    border-bottom: 1px solid var(--cui-border-color);
+
+    .nav-item {
+      margin-bottom: -1px;
+
+      .nav-link {
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+        padding: 0.5rem 1rem;
+
+        &.active {
+          background-color: var(--cui-card-bg);
+          border-color: var(--cui-border-color) var(--cui-border-color) transparent;
+        }
+
+        &:not(.active) {
+          color: var(--cui-body-color);
+          background-color: transparent;
+          border-color: transparent;
+
+          &:hover {
+            border-color: var(--cui-border-color-translucent);
+          }
+        }
+      }
+    }
+  }
+}
+
+
 // Tema Claro
 html[data-coreui-theme="light"] {
   .sidebar {

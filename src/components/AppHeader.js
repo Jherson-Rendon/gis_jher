@@ -1,100 +1,52 @@
-import React, { useEffect, useRef } from 'react'
+// src/components/AppHeader.js
+import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
-  CDropdown,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdownToggle,
   CHeader,
+  CHeaderBrand,
+  CHeaderDivider,
   CHeaderNav,
   CHeaderToggler,
   CNavLink,
   CNavItem,
-  useColorModes,
+  CButton,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilBell,
-  cilContrast,
-  cilEnvelopeOpen,
-  cilList,
-  cilMenu,
-  cilMoon,
-  cilSun,
-} from '@coreui/icons'
+import { cilBell, cilEnvelopeOpen, cilList, cilMenu, cilMoon, cilSun } from '@coreui/icons'
 
-import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
+import { useTheme } from '../contexts/ThemeContext'
 
 const AppHeader = () => {
-  const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
-
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
-
-  useEffect(() => {
-    document.addEventListener('scroll', () => {
-      headerRef.current &&
-        headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
-    })
-  }, [])
-
-  // Manejar cambios de tema
-  useEffect(() => {
-    // Aplicar el atributo data-coreui-theme para que CoreUI cambie estilos automáticamente
-    document.documentElement.setAttribute('data-coreui-theme', colorMode)
-
-    // Mantener el fondo oscuro en tema dark que ya funciona bien
-    if (colorMode === 'dark') {
-      document.body.style.backgroundColor = 'var(--cui-dark)'
-      const appElement = document.querySelector('.app')
-      if (appElement) appElement.style.backgroundColor = 'var(--cui-dark)'
-    } else {
-      // Para tema claro, eliminar estilos inline forzados
-      document.body.style.backgroundColor = ''
-      const appElement = document.querySelector('.app')
-      if (appElement) appElement.style.backgroundColor = ''
-    }
-
-    // Agregar/quitar una clase global para selectores CSS
-    document.body.classList.toggle('theme-dark', colorMode === 'dark')
-    document.body.classList.toggle('theme-light', colorMode === 'light')
-  }, [colorMode])
+  const { isDark, toggleTheme } = useTheme()
 
   return (
-    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
-      <CContainer className="border-bottom px-4" fluid>
+    <CHeader position="sticky" className={isDark ? 'bg-dark text-white border-dark' : ''}>
+      <CContainer fluid>
         <CHeaderToggler
+          className="ps-1"
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-          style={{ marginInlineStart: '-14px' }}
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav className="d-none d-md-flex">
+        <CHeaderBrand className="mx-auto d-md-none" to="/">
+          <h4 className="m-0">GisoSalud</h4>
+        </CHeaderBrand>
+        <CHeaderNav className="d-none d-md-flex me-auto">
           <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
+            <CNavLink to="/dashboard" component={NavLink}>
               Dashboard
             </CNavLink>
           </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">Users</CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">Settings</CNavLink>
-          </CNavItem>
         </CHeaderNav>
-        <CHeaderNav className="ms-auto">
+        <CHeaderNav>
           <CNavItem>
             <CNavLink href="#">
               <CIcon icon={cilBell} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilList} size="lg" />
             </CNavLink>
           </CNavItem>
           <CNavItem>
@@ -103,58 +55,20 @@ const AppHeader = () => {
             </CNavLink>
           </CNavItem>
         </CHeaderNav>
-        <CHeaderNav>
-          <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
-          <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false}>
-              {colorMode === 'dark' ? (
-                <CIcon icon={cilMoon} size="lg" />
-              ) : colorMode === 'auto' ? (
-                <CIcon icon={cilContrast} size="lg" />
-              ) : (
-                <CIcon icon={cilSun} size="lg" />
-              )}
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem
-                active={colorMode === 'light'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('light')}
-              >
-                <CIcon className="me-2" icon={cilSun} size="lg" /> Light
-              </CDropdownItem>
-              <CDropdownItem
-                active={colorMode === 'dark'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('dark')}
-              >
-                <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
-              </CDropdownItem>
-              <CDropdownItem
-                active={colorMode === 'auto'}
-                className="d-flex align-items-center"
-                as="button"
-                type="button"
-                onClick={() => setColorMode('auto')}
-              >
-                <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
-              </CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
-          <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
-          </li>
+        <CHeaderNav className="ms-3">
+          {/* Reemplazar el import de ThemeToggler con el componente inline */}
+          <CButton
+            color={isDark ? 'light' : 'dark'}
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="me-2"
+            title={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+          >
+            <CIcon icon={isDark ? cilSun : cilMoon} size="lg" />
+          </CButton>
           <AppHeaderDropdown />
         </CHeaderNav>
-      </CContainer>
-      <CContainer className="px-4" fluid>
-        <AppBreadcrumb />
       </CContainer>
     </CHeader>
   )

@@ -27,42 +27,42 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
-  // // Modificar la función login para pruebas
-  // const login = async (credentials) => {
-  //   try {
-  //     const userData = await mockAuthService.login(credentials)
-  //     console.log('Login exitoso, datos de usuario:', userData)
-  //     setUser(userData)
-  //     return userData
-  //   } catch (error) {
-  //     console.error('Error en login:', error)
-  //     throw error
-  //   }
-  // }
-
-  // Modificar la función login para producción
+  // Modificar la función login para pruebas
   const login = async (credentials) => {
     try {
-      // Llamar al servicio real de autenticación
-      const response = await authServices.login(credentials.email, credentials.password);
-
-      // Extraer datos del usuario y tokens de la respuesta
-      const { user, token, refreshToken } = response;
-
-      // Establecer el usuario en el estado
-      setUser({
-        ...user,
-        tokens: {
-          accessToken: token,
-          refreshToken: refreshToken
-        }
-      });
-
-      return user;
+      const userData = await mockAuthService.login(credentials)
+      console.log('Login exitoso, datos de usuario:', userData)
+      setUser(userData)
+      return userData
     } catch (error) {
-      throw error;
+      console.error('Error en login:', error)
+      throw error
     }
-  };
+  }
+
+  // // Modificar la función login para producción
+  // const login = async (credentials) => {
+  //   try {
+  //     // Llamar al servicio real de autenticación
+  //     const response = await authServices.login(credentials.email, credentials.password);
+
+  //     // Extraer datos del usuario y tokens de la respuesta
+  //     const { user, token, refreshToken } = response;
+
+  //     // Establecer el usuario en el estado
+  //     setUser({
+  //       ...user,
+  //       tokens: {
+  //         accessToken: token,
+  //         refreshToken: refreshToken
+  //       }
+  //     });
+
+  //     return user;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // };
 
 
   const logout = () => {

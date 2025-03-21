@@ -1,41 +1,32 @@
+// src/_nav.js
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilBell,
-  cilCalculator,
-  cilChartPie,
-  cilCursor,
-  cilDescription,
-  cilDrop,
-  cilExternalLink,
-  cilNotes,
-  cilPencil,
-  cilPuzzle,
   cilSpeedometer,
-  cilStar,
   cilPeople,
   cilHome,
   cilHospital,
   cilSettings,
   cilUser,
-  // Reemplazar los iconos no disponibles con alternativas
-  cilBriefcase,  // En lugar de cilMedicalCross
-  cilHeart,      // Este sí está disponible
-  cilBeaker,     // En lugar de cilFlask
-  cilDollar,     // En lugar de cilMoney
-  cilCalendar,   // Este sí está disponible
+  cilBriefcase,
+  cilHeart,
+  cilBeaker,
+  cilDollar,
+  cilCalendar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import { MODULES } from './views/dashboard/SubsystemCards'
 
 // Función para generar el menú según el rol del usuario
-const generateNav = (user) => {
+const generateNav = (user, setActiveModule) => {
   // Menú base que todos los usuarios pueden ver
   const baseNav = [
     {
       component: CNavItem,
       name: 'Dashboard',
-      to: user?.role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : '/dashboard',
+      to: '/dashboard',
       icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+      onClick: () => setActiveModule(null) // Resetear el módulo activo al ir al dashboard principal
     },
   ]
 
@@ -44,254 +35,90 @@ const generateNav = (user) => {
     return baseNav
   }
 
+  // Función para crear un elemento de navegación para un módulo
+  const createModuleNavItem = (moduleId) => {
+    const module = MODULES[moduleId];
+    if (!module) return null;
+
+    return {
+      component: CNavItem,
+      name: module.title,
+      to: '/dashboard', // Siempre vamos al dashboard, pero cambiamos el módulo activo
+      icon: <CIcon icon={module.icon} customClassName="nav-icon" />,
+      onClick: () => setActiveModule(moduleId) // Esto ahora usará changeActiveModule
+    };
+  };
+
   // Menús específicos por rol
   const roleMenus = {
     SUPER_ADMIN: [
       {
         component: CNavGroup,
-        name: 'Super Administrador',
+        name: 'Módulos Administrativos',
         icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
         items: [
-          {
-            component: CNavItem,
-            name: 'Gestión de IPS',
-            to: '/super-admin/ips-management',
-            icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Usuarios',
-            to: '/super-admin/users',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Configuración Global',
-            to: '/super-admin/global-settings',
-            icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
-          },
+          createModuleNavItem('super-admin'),
+          createModuleNavItem('admin-ips'),
         ],
       },
-      // Módulo de Administrador IPS como grupo desplegable
       {
         component: CNavGroup,
-        name: 'Administrador IPS',
-        icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Gestión de Usuarios IPS',
-            to: '/admin-ips/users',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Configuración de IPS',
-            to: '/admin-ips/settings',
-            icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
-          },
-        ],
-      },
-      // Módulo Médico como grupo desplegable
-      {
-        component: CNavGroup,
-        name: 'Médicos',
+        name: 'Módulos Operativos',
         icon: <CIcon icon={cilBriefcase} customClassName="nav-icon" />,
         items: [
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/medico/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Consultas',
-            to: '/medico/consultas',
-            icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
-          },
-        ],
-      },
-      // Módulo Enfermería como grupo desplegable
-      {
-        component: CNavGroup,
-        name: 'Enfermería',
-        icon: <CIcon icon={cilHeart} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/enfermera/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-        ],
-      },
-      // Módulo Laboratorio como grupo desplegable
-      {
-        component: CNavGroup,
-        name: 'Laboratorio',
-        icon: <CIcon icon={cilBeaker} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Exámenes',
-            to: '/laboratorio/examenes',
-            icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
-          },
-        ],
-      },
-      // Módulo Contabilidad como grupo desplegable
-      {
-        component: CNavGroup,
-        name: 'Contabilidad',
-        icon: <CIcon icon={cilDollar} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Facturación',
-            to: '/contabilidad/facturacion',
-            icon: <CIcon icon={cilCalculator} customClassName="nav-icon" />,
-          },
-        ],
-      },
-      // Módulo Recepción como grupo desplegable
-      {
-        component: CNavGroup,
-        name: 'Recepción',
-        icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Citas',
-            to: '/recepcion/citas',
-            icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/recepcion/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
+          createModuleNavItem('medico'),
+          createModuleNavItem('enfermeria'),
+          createModuleNavItem('laboratorio'),
+          createModuleNavItem('contabilidad'),
+          createModuleNavItem('recepcion'),
         ],
       },
     ],
     ADMIN: [
       {
         component: CNavGroup,
-        name: 'Administrador IPS',
-        icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
+        name: 'Módulos Administrativos',
+        icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
         items: [
-          {
-            component: CNavItem,
-            name: 'Gestión de Usuarios',
-            to: '/admin-ips/users',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Configuración de IPS',
-            to: '/admin-ips/settings',
-            icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
-          },
+          createModuleNavItem('admin-ips'),
         ],
       },
     ],
     MEDICO: [
-      {
-        component: CNavGroup,
-        name: 'Médico',
-        icon: <CIcon icon={cilBriefcase} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/medico/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Consultas',
-            to: '/medico/consultas',
-            icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
-          },
-        ],
-      },
+      createModuleNavItem('medico'),
     ],
     ENFERMERA: [
-      {
-        component: CNavGroup,
-        name: 'Enfermería',
-        icon: <CIcon icon={cilHeart} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/enfermera/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-        ],
-      },
+      createModuleNavItem('enfermeria'),
     ],
     LABORATORIO: [
-      {
-        component: CNavGroup,
-        name: 'Laboratorio',
-        icon: <CIcon icon={cilBeaker} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Exámenes',
-            to: '/laboratorio/examenes',
-            icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
-          },
-        ],
-      },
+      createModuleNavItem('laboratorio'),
     ],
     CONTABILIDAD: [
-      {
-        component: CNavGroup,
-        name: 'Contabilidad',
-        icon: <CIcon icon={cilDollar} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Facturación',
-            to: '/contabilidad/facturacion',
-            icon: <CIcon icon={cilCalculator} customClassName="nav-icon" />,
-          },
-        ],
-      },
+      createModuleNavItem('contabilidad'),
     ],
     RECEPCION: [
-      {
-        component: CNavGroup,
-        name: 'Recepción',
-        icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-        items: [
-          {
-            component: CNavItem,
-            name: 'Citas',
-            to: '/recepcion/citas',
-            icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-          },
-          {
-            component: CNavItem,
-            name: 'Pacientes',
-            to: '/recepcion/pacientes',
-            icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-          },
-        ],
-      },
+      createModuleNavItem('recepcion'),
     ],
   }
 
+  // Filtrar elementos nulos y elementos vacíos
+  const roleMenu = roleMenus[user.role] || [];
+  const filteredRoleMenu = roleMenu.filter(item => {
+    if (!item) return false;
+    // Si es un grupo, verificar que tenga elementos
+    if (item.component === CNavGroup) {
+      return item.items && item.items.filter(subItem => subItem !== null).length > 0;
+    }
+    return true;
+  });
+
   // Agregar menús específicos del rol al menú base
-  return [...baseNav, ...(roleMenus[user.role] || [])]
+  return [...baseNav, ...filteredRoleMenu]
 }
 
-// Exportar una función que devuelve el menú según el usuario
-export const getNav = (user) => {
-  return generateNav(user)
+// Exportar una función que devuelve el menú según el usuario y la función setActiveModule
+export const getNav = (user, setActiveModule) => {
+  return generateNav(user, setActiveModule)
 }
 
 // Exportar un menú por defecto para compatibilidad con el código existente

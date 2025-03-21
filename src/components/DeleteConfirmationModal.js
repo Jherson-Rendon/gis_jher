@@ -5,24 +5,32 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
-  CButton
+  CButton,
+  CSpinner
 } from '@coreui/react';
 
-const DeleteConfirmationModal = ({ visible, onClose, onConfirm, title, message }) => {
+const DeleteConfirmationModal = ({
+  visible,
+  onClose,
+  onConfirm,
+  title = 'Confirmar eliminación',
+  message = '¿Está seguro que desea eliminar este elemento?',
+  loading = false
+}) => {
   return (
-    <CModal visible={visible} onClose={onClose}>
+    <CModal visible={visible} onClose={onClose} backdrop="static">
       <CModalHeader>
-        <CModalTitle>{title || 'Confirmar eliminación'}</CModalTitle>
+        <CModalTitle>{title}</CModalTitle>
       </CModalHeader>
       <CModalBody>
-        {message || '¿Está seguro que desea eliminar este elemento?'}
+        <p>{message}</p>
       </CModalBody>
       <CModalFooter>
-        <CButton color="secondary" onClick={onClose}>
+        <CButton color="secondary" onClick={onClose} disabled={loading}>
           Cancelar
         </CButton>
-        <CButton color="danger" onClick={onConfirm}>
-          Eliminar
+        <CButton color="danger" onClick={onConfirm} disabled={loading}>
+          {loading ? <CSpinner size="sm" /> : 'Eliminar'}
         </CButton>
       </CModalFooter>
     </CModal>

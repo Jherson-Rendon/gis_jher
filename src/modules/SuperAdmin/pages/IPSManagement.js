@@ -1,111 +1,116 @@
+// src/modules/SuperAdmin/pages/IPSManagement.js
 import React, { useState } from 'react';
 import {
   CCard,
   CCardBody,
   CCardHeader,
-  CRow,
-  CCol,
-  CButton,
   CTable,
   CTableHead,
   CTableRow,
   CTableHeaderCell,
   CTableBody,
   CTableDataCell,
+  CButton,
+  CSpinner,
+  CBadge,
   CInputGroup,
   CFormInput,
-  CInputGroupText,
-  CBadge
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSearch, cilPencil, cilTrash } from '@coreui/icons';
+import { cilPencil, cilTrash, cilPlus, cilSearch } from '@coreui/icons';
+import { useTheme } from '../../../contexts/ThemeContext';
+
+// Datos de ejemplo
+const INITIAL_IPS = [
+  {
+    id: 1,
+    name: 'Hospital Central',
+    address: 'Calle 123 #45-67',
+    city: 'Bogotá',
+    phone: '601-1234567',
+    email: 'info@hospitalcentral.com',
+    status: 'active',
+  },
+  {
+    id: 2,
+    name: 'Clínica del Norte',
+    address: 'Av. Principal 789',
+    city: 'Medellín',
+    phone: '604-7654321',
+    email: 'contacto@clinicadelnorte.com',
+    status: 'active',
+  },
+  {
+    id: 3,
+    name: 'Centro Médico Especializado',
+    address: 'Carrera 45 #12-34',
+    city: 'Cali',
+    phone: '602-9876543',
+    email: 'info@centromedico.com',
+    status: 'inactive',
+  },
+];
 
 const IPSManagement = () => {
-  // Datos de ejemplo para IPS
-  const [ipsList] = useState([
-    {
-      id: 1,
-      name: 'IPS Salud Total',
-      address: 'Calle 123 #45-67, Bogotá',
-      phone: '601-1234567',
-      email: 'contacto@saludtotal.com',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'Centro Médico Bienestar',
-      address: 'Carrera 78 #90-12, Medellín',
-      phone: '604-7654321',
-      email: 'info@bienestar.com',
-      status: 'active'
-    },
-    {
-      id: 3,
-      name: 'Hospital San José',
-      address: 'Avenida 45 #23-56, Cali',
-      phone: '602-3456789',
-      email: 'contacto@sanjose.com',
-      status: 'inactive'
-    }
-  ]);
-
+  const { isDark } = useTheme();
+  const [ips, setIps] = useState(INITIAL_IPS);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtrar IPS por término de búsqueda
-  const filteredIPS = ipsList.filter(
+  // Filtrar IPS según el término de búsqueda
+  const filteredIPS = ips.filter(
     (ips) =>
       ips.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ips.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ips.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ips.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <>
-      <CCard className="mb-4">
-        <CCardHeader>
-          <h4>Gestión de IPS</h4>
-        </CCardHeader>
-        <CCardBody>
-          <CRow className="mb-3">
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilSearch} />
-                </CInputGroupText>
-                <CFormInput
-                  placeholder="Buscar IPS..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </CInputGroup>
-            </CCol>
-            <CCol md={6} className="d-flex justify-content-end">
-              <CButton color="primary">
-                <CIcon icon={cilPlus} className="me-2" />
-                Nueva IPS
-              </CButton>
-            </CCol>
-          </CRow>
+    <CCard className={isDark ? 'bg-dark text-white' : ''}>
+      <CCardHeader className="d-flex justify-content-between align-items-center">
+        <h4 className="mb-0">Gestión de IPS</h4>
+        <CButton color="primary">
+          <CIcon icon={cilPlus} className="me-2" />
+          Nueva IPS
+        </CButton>
+      </CCardHeader>
+      <CCardBody>
+        {/* Barra de búsqueda */}
+        <div className="mb-4">
+          <CInputGroup>
+            <CFormInput
+              placeholder="Buscar IPS..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              startContent={<CIcon icon={cilSearch} />}
+            />
+          </CInputGroup>
+        </div>
 
-          <CTable hover responsive>
+        {loading ? (
+          <div className="text-center my-4">
+            <CSpinner color="primary" />
+          </div>
+        ) : (
+          <CTable hover responsive className={isDark ? 'table-dark' : ''}>
             <CTableHead>
               <CTableRow>
-                <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Nombre</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Dirección</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Teléfono</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Email</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Estado</CTableHeaderCell>
-                <CTableHeaderCell scope="col">Acciones</CTableHeaderCell>
+                <CTableHeaderCell>Nombre</CTableHeaderCell>
+                <CTableHeaderCell>Dirección</CTableHeaderCell>
+                <CTableHeaderCell>Ciudad</CTableHeaderCell>
+                <CTableHeaderCell>Teléfono</CTableHeaderCell>
+                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Estado</CTableHeaderCell>
+                <CTableHeaderCell>Acciones</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
               {filteredIPS.length > 0 ? (
                 filteredIPS.map((ips) => (
                   <CTableRow key={ips.id}>
-                    <CTableHeaderCell scope="row">{ips.id}</CTableHeaderCell>
                     <CTableDataCell>{ips.name}</CTableDataCell>
                     <CTableDataCell>{ips.address}</CTableDataCell>
+                    <CTableDataCell>{ips.city}</CTableDataCell>
                     <CTableDataCell>{ips.phone}</CTableDataCell>
                     <CTableDataCell>{ips.email}</CTableDataCell>
                     <CTableDataCell>
@@ -114,10 +119,17 @@ const IPSManagement = () => {
                       </CBadge>
                     </CTableDataCell>
                     <CTableDataCell>
-                      <CButton color="info" size="sm" className="me-2">
+                      <CButton
+                        color="info"
+                        size="sm"
+                        className="me-2"
+                      >
                         <CIcon icon={cilPencil} />
                       </CButton>
-                      <CButton color="danger" size="sm">
+                      <CButton
+                        color="danger"
+                        size="sm"
+                      >
                         <CIcon icon={cilTrash} />
                       </CButton>
                     </CTableDataCell>
@@ -132,9 +144,9 @@ const IPSManagement = () => {
               )}
             </CTableBody>
           </CTable>
-        </CCardBody>
-      </CCard>
-    </>
+        )}
+      </CCardBody>
+    </CCard>
   );
 };
 

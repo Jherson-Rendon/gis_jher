@@ -3,7 +3,11 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './scss/style.scss'
 import ProtectedRoute from './components/ProtectedRoute'
 import DebugInfo from './components/DebugInfo'
-
+import { TabProvider } from './contexts/TabContext'
+import { ModuleProvider } from './contexts/ModuleContext'
+// Importar ToastContainer y los estilos de react-toastify
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 const loading = (
   <div className="pt-3 text-center">
@@ -26,6 +30,20 @@ class App extends Component {
   render() {
     return (
       <BrowserRouter>
+        {/* Agregar ToastContainer para las notificaciones */}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+
         <Suspense fallback={loading}>
           <Routes>
             {/* Ruta raíz redirige a login */}
@@ -46,7 +64,11 @@ class App extends Component {
               path="*"
               element={
                 <ProtectedRoute>
-                  <DefaultLayout />
+                  <ModuleProvider>
+                    <TabProvider>
+                      <DefaultLayout />
+                    </TabProvider>
+                  </ModuleProvider>
                 </ProtectedRoute>
               }
             />
@@ -54,7 +76,6 @@ class App extends Component {
         </Suspense>
         <DebugInfo />
       </BrowserRouter>
-
     )
   }
 }
