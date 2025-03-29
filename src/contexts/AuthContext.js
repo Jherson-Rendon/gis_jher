@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Determinar si usar el servicio mock o real
-  const USE_MOCK_SERVICE = false; // Cambiar a false para usar el servicio real
+  const USE_MOCK_SERVICE = true; // Cambiar a false para usar el servicio real
   const service = USE_MOCK_SERVICE ? mockAuthService : authServices;
 
   useEffect(() => {
