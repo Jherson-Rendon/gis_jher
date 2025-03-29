@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import mockAuthService from '../views/auth/services/mockAuthService';
 import authServices from '../views/auth/services/authServices';
+import { useApiMode } from './ApiModeContext';
 
 const AuthContext = createContext();
 
@@ -10,10 +11,10 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { useMockApi } = useApiMode(); // Usar el contexto de API
 
-  // Determinar si usar el servicio mock o real
-  const USE_MOCK_SERVICE = true; // Cambiar a false para usar el servicio real
-  const service = USE_MOCK_SERVICE ? mockAuthService : authServices;
+  // Determinar el servicio a usar basado en el contexto
+  const service = useMockApi ? mockAuthService : authServices;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
         const currentUser = service.getCurrentUser();
         console.log('Usuario actual:', currentUser);
 
-        if (currentUser && !USE_MOCK_SERVICE) {
+        if (currentUser && !useMockApi) {
           // Verificar si el token es válido
           const isValid = await service.validateToken();
           if (!isValid) {
@@ -41,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuth();
-  }, []);
+  }, [service, useMockApi]);
 
   const login = async (credentials) => {
     try {

@@ -1,12 +1,8 @@
-// src/views/users/UserManagement.js
-
 import React, { useState, useEffect } from 'react';
 import {
   CCard,
   CCardBody,
   CCardHeader,
-  CCol,
-  CRow,
   CTable,
   CTableHead,
   CTableRow,
@@ -15,267 +11,248 @@ import {
   CTableDataCell,
   CButton,
   CSpinner,
-  CFormInput,
-  CInputGroup,
-  CInputGroupText,
   CBadge,
-  CDropdown,
-  CDropdownToggle,
-  CDropdownMenu,
-  CDropdownItem
+  CInputGroup,
+  CFormInput,
+  CFormSelect,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilPlus, cilSearch, cilPencil, cilTrash, cilUser } from '@coreui/icons';
-import { useAuth } from '../../contexts/AuthContext';
-import mockAuthService from '../auth/services/mockAuthService';
-import UserFormModal from './components/UserFormModal';
-import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import { cilPencil, cilTrash, cilPlus, cilSearch } from '@coreui/icons';
+import { useTheme } from '../../contexts/ThemeContext';
+import UserFormModal from "./components/UserFormModal";
+import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
+import { toast } from "react-toastify";
+import userService from '../../services/api/userService';
+import roleService from '../../services/api/roleService';
 
 const UserManagement = () => {
-  const { user, hasRole } = useAuth();
+  const { isDark } = useTheme();
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [filterBy, setFilterBy] = useState('name');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const isSuperAdmin = hasRole('SUPER_ADMIN');
-
-  // Cargar usuarios
+  // Cargar usuarios y roles al montar el componente
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await mockAuthService.getUsers(user.id);
-        setUsers(data);
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Error al cargar usuarios');
+        const [usersData, rolesData] = await Promise.all([
+          userService.getUsers(),
+          roleService.getRoles()
+        ]);
+        setUsers(usersData);
+        setRoles(rolesData);
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        toast.error('Error al cargar los usuarios');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
-  }, [user.id]);
+    fetchData();
+  }, []);
 
-  // Filtrar usuarios por término de búsqueda
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.roleName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrar usuarios según el término de búsqueda
+  const filteredUsers = users.filter(user => {
+    if (!searchTerm) return true;
 
-  // Manejar creación/edición de usuario
-  const handleSaveUser = async (userData) => {
+    const term = searchTerm.toLowerCase();
+    switch (filterBy) {
+      case 'name':
+        return `${user.firstName} ${user.lastName}`.toLowerCase().includes(term);
+      case 'email':
+        return user.email.toLowerCase().includes(term);
+      case 'document':
+        return user.documentNumber.includes(term);
+      default:
+        return true;
+    }
+  });
+
+  const handleOpenModal = (user = null) => {
+    setSelectedUser(user);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedUser(null);
+  };
+
+  const handleOpenDeleteModal = (user) => {
+    setSelectedUser(user);
+    setDeleteModalVisible(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteModalVisible(false);
+    setSelectedUser(null);
+  };
+
+  const handleSaveUser = async (formData) => {
     try {
       setLoading(true);
 
-      if (isEditing && currentUser) {
+      if (selectedUser) {
         // Actualizar usuario existente
-        const result = await mockAuthService.updateUser(currentUser.id, userData, user.id);
-        setUsers(prevUsers =>
-          prevUsers.map(u => u.id === currentUser.id ? result.user : u)
-        );
+        const updatedUser = await userService.updateUser(selectedUser.id, formData);
+        setUsers(users.map(user => user.id === selectedUser.id ? updatedUser : user));
+        toast.success('Usuario actualizado correctamente');
       } else {
         // Crear nuevo usuario
-        const result = await mockAuthService.createUser(userData, user.id);
-        setUsers(prevUsers => [...prevUsers, result.user]);
+        const newUser = await userService.createUser(formData);
+        setUsers([...users, newUser]);
+        toast.success('Usuario creado correctamente');
       }
 
-      setShowUserModal(false);
-      setCurrentUser(null);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err.message || 'Error al guardar usuario');
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error al guardar usuario:', error);
+      toast.error('Error al guardar el usuario');
     } finally {
       setLoading(false);
     }
   };
 
-  // Manejar eliminación de usuario
   const handleDeleteUser = async () => {
-    if (!currentUser) return;
-
     try {
-      setLoading(true);
-      await mockAuthService.deleteUser(currentUser.id, user.id);
-      setUsers(prevUsers => prevUsers.filter(u => u.id !== currentUser.id));
-      setShowDeleteModal(false);
-      setCurrentUser(null);
-    } catch (err) {
-      setError(err.message || 'Error al eliminar usuario');
+      if (selectedUser) {
+        setDeleteLoading(true);
+        await userService.deleteUser(selectedUser.id);
+        setUsers(users.filter(user => user.id !== selectedUser.id));
+        toast.success('Usuario eliminado correctamente');
+        handleCloseDeleteModal();
+      }
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      toast.error('Error al eliminar el usuario');
     } finally {
-      setLoading(false);
-    }
-  };
-
-  // Preparar para editar usuario
-  const handleEditUser = (user) => {
-    setCurrentUser(user);
-    setIsEditing(true);
-    setShowUserModal(true);
-  };
-
-  // Preparar para eliminar usuario
-  const handleDeleteClick = (user) => {
-    setCurrentUser(user);
-    setShowDeleteModal(true);
-  };
-
-  // Función para obtener color de badge según rol
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return 'danger';
-      case 'ADMIN':
-        return 'primary';
-      case 'MEDICO':
-        return 'success';
-      case 'ENFERMERA':
-        return 'info';
-      case 'LABORATORIO':
-        return 'warning';
-      case 'CONTABILIDAD':
-        return 'dark';
-      case 'RECEPCION':
-        return 'secondary';
-      default:
-        return 'light';
+      setDeleteLoading(false);
     }
   };
 
   return (
-    <>
-      <CCard className="mb-4">
-        <CCardHeader>
-          <h4>Gestión de Usuarios</h4>
-        </CCardHeader>
-        <CCardBody>
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
+    <CCard className={isDark ? 'bg-dark text-white' : ''}>
+      <CCardHeader className="d-flex justify-content-between align-items-center">
+        <h4 className="mb-0">Gestión de Usuarios</h4>
+        <CButton color="primary" onClick={() => handleOpenModal()}>
+          <CIcon icon={cilPlus} className="me-2" />
+          Nuevo Usuario
+        </CButton>
+      </CCardHeader>
+      <CCardBody>
+        {/* Barra de búsqueda y filtros */}
+        <div className="mb-4">
+          <CInputGroup>
+            <CFormSelect
+              style={{ maxWidth: '150px' }}
+              value={filterBy}
+              onChange={(e) => setFilterBy(e.target.value)}
+            >
+              <option value="name">Nombre</option>
+              <option value="email">Email</option>
+              <option value="document">Documento</option>
+            </CFormSelect>
+            <CFormInput
+              placeholder="Buscar usuarios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <CButton color="primary" variant="outline">
+              <CIcon icon={cilSearch} />
+            </CButton>
+          </CInputGroup>
+        </div>
 
-          <CRow className="mb-3">
-            <CCol md={6}>
-              <CInputGroup>
-                <CInputGroupText>
-                  <CIcon icon={cilSearch} />
-                </CInputGroupText>
-                <CFormInput
-                  placeholder="Buscar usuarios..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                              </CInputGroup>
-            </CCol>
-            <CCol md={6} className="d-flex justify-content-end">
-              <CButton color="primary" onClick={() => {
-                setCurrentUser(null);
-                setIsEditing(false);
-                setShowUserModal(true);
-              }}>
-                <CIcon icon={cilPlus} className="me-2" />
-                Nuevo Usuario
-              </CButton>
-            </CCol>
-          </CRow>
-
-          {loading ? (
-            <div className="text-center my-5">
-              <CSpinner color="primary" />
-            </div>
-          ) : (
-            <CTable hover responsive>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Nombre</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Email</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Rol</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Acciones</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <CTableRow key={user.id}>
-                      <CTableHeaderCell scope="row">{user.id}</CTableHeaderCell>
-                      <CTableDataCell>{user.name}</CTableDataCell>
-                      <CTableDataCell>{user.email}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color={getRoleBadgeColor(user.role)}>
-                          {user.roleName}
-                        </CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CButton
-                          color="info"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => handleEditUser(user)}
-                          disabled={user.role === 'SUPER_ADMIN' && !isSuperAdmin}
-                        >
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton
-                          color="danger"
-                          size="sm"
-                          onClick={() => handleDeleteClick(user)}
-                          disabled={user.role === 'SUPER_ADMIN' && !isSuperAdmin}
-                        >
-                          <CIcon icon={cilTrash} />
-                        </CButton>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))
-                ) : (
-                  <CTableRow>
-                    <CTableDataCell colSpan="5" className="text-center">
-                      No se encontraron usuarios
+        {loading ? (
+          <div className="text-center my-4">
+            <CSpinner color="primary" />
+          </div>
+        ) : (
+          <CTable hover responsive className={isDark ? 'table-dark' : ''}>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>Documento</CTableHeaderCell>
+                <CTableHeaderCell>Nombre</CTableHeaderCell>
+                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Rol</CTableHeaderCell>
+                <CTableHeaderCell>Estado</CTableHeaderCell>
+                <CTableHeaderCell>Acciones</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <CTableRow key={user.id}>
+                    <CTableDataCell>{user.documentType} {user.documentNumber}</CTableDataCell>
+                    <CTableDataCell>{user.firstName} {user.lastName}</CTableDataCell>
+                    <CTableDataCell>{user.email}</CTableDataCell>
+                    <CTableDataCell>
+                      {roles.find(r => r.id === user.roleId)?.name || 'N/A'}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      <CBadge color={user.isActive ? 'success' : 'danger'}>
+                        {user.isActive ? 'Activo' : 'Inactivo'}
+                      </CBadge>
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      <CButton
+                        color="info"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleOpenModal(user)}
+                      >
+                        <CIcon icon={cilPencil} />
+                      </CButton>
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        onClick={() => handleOpenDeleteModal(user)}
+                      >
+                        <CIcon icon={cilTrash} />
+                      </CButton>
                     </CTableDataCell>
                   </CTableRow>
-                )}
-              </CTableBody>
-            </CTable>
-          )}
-        </CCardBody>
-      </CCard>
+                ))
+              ) : (
+                <CTableRow>
+                  <CTableDataCell colSpan="6" className="text-center">
+                    No se encontraron usuarios
+                  </CTableDataCell>
+                </CTableRow>
+              )}
+            </CTableBody>
+          </CTable>
+        )}
+      </CCardBody>
 
-      {/* Modal para crear/editar usuario */}
+      {/* Modal para crear/editar usuarios */}
       <UserFormModal
-        visible={showUserModal}
-        onClose={() => {
-          setShowUserModal(false);
-          setCurrentUser(null);
-          setIsEditing(false);
-        }}
+        visible={modalVisible}
+        onClose={handleCloseModal}
         onSave={handleSaveUser}
-        user={currentUser}
-        isEditing={isEditing}
-        isSuperAdmin={isSuperAdmin}
+        user={selectedUser}
+        roles={roles}
       />
 
       {/* Modal de confirmación para eliminar */}
       <DeleteConfirmationModal
-        visible={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setCurrentUser(null);
-        }}
+        visible={deleteModalVisible}
+        onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteUser}
-        title="Eliminar Usuario"
-        message={`¿Está seguro que desea eliminar al usuario ${currentUser?.name}?`}
+        title="Confirmar eliminación"
+        message={selectedUser ? `¿Está seguro que desea eliminar el usuario "${selectedUser.firstName} ${selectedUser.lastName}"?` : ''}
+        loading={deleteLoading}
       />
-    </>
+    </CCard>
   );
 };
 
 export default UserManagement;
-

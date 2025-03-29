@@ -23,6 +23,11 @@ export const ThemeProvider = ({ children }) => {
     document.body.classList.toggle('dark-theme', theme === 'dark');
   };
 
+  // Función para alternar entre temas claro y oscuro
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
+
   // Cargar la preferencia de tema al iniciar
   useEffect(() => {
     const savedTheme = localStorage.getItem('user-theme-preference');
@@ -35,6 +40,7 @@ export const ThemeProvider = ({ children }) => {
   const value = {
     theme: colorMode,
     setTheme,
+    toggleTheme,
     isDark,
     isLight: !isDark,
     isAuto: colorMode === 'auto',

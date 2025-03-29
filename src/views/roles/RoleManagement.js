@@ -22,33 +22,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import RoleFormModal from "./components/RoleFormModal";
 import DeleteConfirmationModal from "../../components/DeleteConfirmationModal";
 import { toast } from "react-toastify";
-
-const INITIAL_ROLES = [
-  {
-    id: 1,
-    name: 'Super Admin',
-    description: 'Acceso completo a todas las funcionalidades del sistema',
-    permissions: ['users_view', 'users_create', 'users_edit', 'users_delete', 'roles_view', 'roles_create', 'roles_edit', 'roles_delete', 'settings_view', 'settings_edit'],
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-01',
-  },
-  {
-    id: 2,
-    name: 'Admin',
-    description: 'Administrador de IPS con acceso a la mayoría de funcionalidades',
-    permissions: ['users_view', 'users_create', 'users_edit', 'roles_view', 'settings_view'],
-    createdAt: '2023-01-02',
-    updatedAt: '2023-01-02',
-  },
-  {
-    id: 3,
-    name: 'Médico',
-    description: 'Acceso a funcionalidades médicas',
-    permissions: ['users_view'],
-    createdAt: '2023-01-03',
-    updatedAt: '2023-01-03',
-  },
-];
+import roleService from '../../services/api/roleService';
 
 const RoleManagement = () => {
   const { isDark } = useTheme();
@@ -59,28 +33,33 @@ const RoleManagement = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBy, setFilterBy] = useState('name');
+  const [permissions, setPermissions] = useState([]);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Simular carga de datos
+  // Cargar roles y permisos al montar el componente
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchData = async () => {
       try {
-        // Aquí iría la llamada a la API
-        // const response = await api.get('/roles');
-        // setRoles(response.data);
-
-        // Simulamos una carga con datos de ejemplo
-        setTimeout(() => {
-          setRoles(INITIAL_ROLES);
-          setLoading(false);
-        }, 1000);
+        setLoading(true);
+        const [rolesData, permissionsData] = await Promise.all([
+          roleService.getRoles(),
+          roleService.getPermissions()
+        ]);
+        setRoles(rolesData);
+        setPermissions(permissionsData || [
+          'users_view', 'users_create', 'users_edit', 'users_delete',
+          'roles_view', 'roles_create', 'roles_edit', 'roles_delete',
+          'settings_view', 'settings_edit'
+        ]);
       } catch (error) {
-        console.error('Error al cargar roles:', error);
+        console.error('Error al cargar datos:', error);
         toast.error('Error al cargar los roles');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchRoles();
+    fetchData();
   }, []);
 
   // Filtrar roles según el término de búsqueda
@@ -91,7 +70,7 @@ const RoleManagement = () => {
     if (filterBy === 'name') {
       return role.name.toLowerCase().includes(term);
     } else if (filterBy === 'description') {
-      return role.description.toLowerCase().includes(term);
+      return role.description?.toLowerCase().includes(term);
     }
     return true;
   });
@@ -116,44 +95,45 @@ const RoleManagement = () => {
     setSelectedRole(null);
   };
 
-  const handleSaveRole = (formData) => {
+  const handleSaveRole = async (formData) => {
     try {
+      setLoading(true);
+
       if (selectedRole) {
         // Actualizar rol existente
-        const updatedRoles = roles.map(role =>
-          role.id === selectedRole.id ? { ...role, ...formData, updatedAt: new Date().toISOString() } : role
-        );
-        setRoles(updatedRoles);
+        const updatedRole = await roleService.updateRole(selectedRole.id, formData);
+        setRoles(roles.map(role => role.id === selectedRole.id ? updatedRole : role));
         toast.success('Rol actualizado correctamente');
       } else {
         // Crear nuevo rol
-        const newRole = {
-          id: roles.length + 1, // En una aplicación real, el ID vendría del backend
-          ...formData,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        const newRole = await roleService.createRole(formData);
         setRoles([...roles, newRole]);
         toast.success('Rol creado correctamente');
       }
+
       handleCloseModal();
     } catch (error) {
       console.error('Error al guardar rol:', error);
       toast.error('Error al guardar el rol');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteRole = () => {
+  const handleDeleteRole = async () => {
     try {
       if (selectedRole) {
-        const updatedRoles = roles.filter(role => role.id !== selectedRole.id);
-        setRoles(updatedRoles);
+        setDeleteLoading(true);
+        await roleService.deleteRole(selectedRole.id);
+        setRoles(roles.filter(role => role.id !== selectedRole.id));
         toast.success('Rol eliminado correctamente');
         handleCloseDeleteModal();
       }
     } catch (error) {
       console.error('Error al eliminar rol:', error);
       toast.error('Error al eliminar el rol');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -182,8 +162,10 @@ const RoleManagement = () => {
               placeholder="Buscar roles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              startContent={<CIcon icon={cilSearch} />}
             />
+            <CButton color="primary" variant="outline">
+              <CIcon icon={cilSearch} />
+            </CButton>
           </CInputGroup>
         </div>
 
@@ -210,22 +192,22 @@ const RoleManagement = () => {
                     <CTableDataCell>{role.name}</CTableDataCell>
                     <CTableDataCell>{role.description}</CTableDataCell>
                     <CTableDataCell>
-                      {role.permissions.slice(0, 3).map((permission) => (
+                      {role.permissions && role.permissions.slice(0, 3).map((permission) => (
                         <CBadge color="info" className="me-1 mb-1" key={permission}>
                           {permission}
                         </CBadge>
                       ))}
-                      {role.permissions.length > 3 && (
+                      {role.permissions && role.permissions.length > 3 && (
                         <CBadge color="secondary">
                           +{role.permissions.length - 3} más
                         </CBadge>
                       )}
                     </CTableDataCell>
                     <CTableDataCell>
-                      {new Date(role.createdAt).toLocaleDateString()}
+                      {role.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}
                     </CTableDataCell>
                     <CTableDataCell>
-                      {new Date(role.updatedAt).toLocaleDateString()}
+                      {role.updatedAt ? new Date(role.updatedAt).toLocaleDateString() : 'N/A'}
                     </CTableDataCell>
                     <CTableDataCell>
                       <CButton
@@ -264,6 +246,7 @@ const RoleManagement = () => {
         onClose={handleCloseModal}
         onSave={handleSaveRole}
         role={selectedRole}
+        availablePermissions={permissions}
       />
 
       {/* Modal de confirmación para eliminar */}
@@ -271,7 +254,9 @@ const RoleManagement = () => {
         visible={deleteModalVisible}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteRole}
-        itemName={selectedRole ? `el rol "${selectedRole.name}"` : ''}
+        title="Confirmar eliminación"
+        message={selectedRole ? `¿Está seguro que desea eliminar el rol "${selectedRole.name}"?` : ''}
+        loading={deleteLoading}
       />
     </CCard>
   );

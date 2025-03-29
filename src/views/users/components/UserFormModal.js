@@ -1,139 +1,105 @@
-// src/views/users/components/UserFormModal.js
-
 import React, { useState, useEffect } from 'react';
 import {
+  CButton,
   CModal,
   CModalHeader,
-  CModalTitle,
   CModalBody,
   CModalFooter,
-  CButton,
   CForm,
   CFormInput,
   CFormLabel,
   CFormSelect,
   CFormFeedback,
+  CRow,
+  CCol,
   CSpinner
 } from '@coreui/react';
-import mockAuthService from '../../auth/services/mockAuthService';
-import authServices from '../../auth/services/authServices';
 
-const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin }) => {
+const UserFormModal = ({ visible, onClose, onSave, user, roles = [] }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    documentType: '',
+    documentNumber: '',
+    nationality: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    secondLastName: '',
     email: '',
-    password: '',
-    confirmPassword: '',
-    role: ''
+    employmentType: '',
+    userType: '',
+    roleId: '',
+    password: ''
   });
-  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(!isEditing);
 
-  //Cargar roles disponibles
+  // Actualizar el formulario cuando cambia el usuario seleccionado
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const availableRoles = await mockAuthService.getRoles();
-        // Si no es super admin, filtrar el rol SUPER_ADMIN
-        const filteredRoles = isSuperAdmin
-          ? availableRoles
-          : availableRoles.filter(role => role.id !== 'SUPER_ADMIN');
-        setRoles(filteredRoles);
-      } catch (error) {
-        console.error('Error al cargar roles:', error);
-      }
-    };
-
-    fetchRoles();
-  }, [isSuperAdmin]);
-
-  // Modificar la función fetchRoles en el useEffect
-// useEffect(() => {
-//   const fetchRoles = async () => {
-//     try {
-//       // Usar el servicio real en lugar del mock
-//       const availableRoles = await authServices.getRoles();
-//       // Si no es super admin, filtrar el rol SUPER_ADMIN
-//       const filteredRoles = isSuperAdmin
-//         ? availableRoles
-//         : availableRoles.filter(role => role.id !== 'superAdmin');
-//       setRoles(filteredRoles);
-//     } catch (error) {
-//       console.error('Error al cargar roles:', error);
-//     }
-//   };
-
-//   fetchRoles();
-// }, [isSuperAdmin]);
-
-  // Cargar datos del usuario si está en modo edición
-  useEffect(() => {
-    if (isEditing && user) {
+    if (user) {
       setFormData({
-        name: user.name || '',
+        documentType: user.documentType || '',
+        documentNumber: user.documentNumber || '',
+        nationality: user.nationality || '',
+        firstName: user.firstName || '',
+        middleName: user.middleName || '',
+        lastName: user.lastName || '',
+        secondLastName: user.secondLastName || '',
         email: user.email || '',
-        password: '',
-        confirmPassword: '',
-        role: user.role || ''
+        employmentType: user.employmentType || '',
+        userType: user.userType || '',
+        roleId: user.roleId || '',
+        password: '' // No incluir contraseña en edición
       });
-      setShowPassword(false);
     } else {
+      // Resetear el formulario si no hay usuario seleccionado (modo creación)
       setFormData({
-        name: '',
+        documentType: '',
+        documentNumber: '',
+        nationality: '',
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        secondLastName: '',
         email: '',
-        password: '',
-        confirmPassword: '',
-        role: ''
+        employmentType: '',
+        userType: '',
+        roleId: '',
+        password: ''
       });
-      setShowPassword(true);
     }
-  }, [isEditing, user, visible]);
+    // Limpiar errores al abrir el modal
+    setErrors({});
+  }, [user, visible]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [id]: value
     }));
 
     // Limpiar error específico cuando el usuario corrige el campo
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
+    if (errors[id]) {
+      setErrors(prev => ({ ...prev, [id]: null }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
+    const requiredFields = ['documentType', 'documentNumber', 'firstName', 'lastName', 'email', 'roleId'];
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        newErrors[field] = 'Este campo es requerido';
+      }
+    });
+
+    if (!user && !formData.password) {
+      newErrors.password = 'La contraseña es requerida para nuevos usuarios';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email inválido';
-    }
-
-    if (showPassword) {
-      if (!formData.password) {
-        newErrors.password = 'La contraseña es requerida';
-      } else if (formData.password.length < 6) {
-        newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Las contraseñas no coinciden';
-      }
-    }
-
-    if (!formData.role) {
-      newErrors.role = 'El rol es requerido';
     }
 
     setErrors(newErrors);
@@ -150,25 +116,13 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
     setLoading(true);
 
     try {
-      // Si no se está editando o si se proporcionó una nueva contraseña
-      const userData = {
-        name: formData.name,
-        email: formData.email,
-        role: formData.role
-      };
-
-      // Solo incluir contraseña si se está creando un nuevo usuario o si se proporcionó una nueva
-      if (showPassword && formData.password) {
-        userData.password = formData.password;
-      }
-
-      await onSave(userData);
+      await onSave(formData);
       onClose();
     } catch (error) {
       console.error('Error al guardar usuario:', error);
       setErrors(prev => ({
         ...prev,
-        form: error.message || 'Error al guardar usuario'
+        form: error.message || 'Error al guardar el usuario'
       }));
     } finally {
       setLoading(false);
@@ -176,9 +130,9 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
   };
 
   return (
-    <CModal visible={visible} onClose={onClose} backdrop="static">
-      <CModalHeader>
-        <CModalTitle>{isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}</CModalTitle>
+    <CModal visible={visible} onClose={onClose} size="lg">
+      <CModalHeader onClose={onClose}>
+        {user ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
       </CModalHeader>
       <CModalBody>
         {errors.form && (
@@ -188,94 +142,189 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
         )}
 
         <CForm onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <CFormLabel htmlFor="name">Nombre</CFormLabel>
-            <CFormInput
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              invalid={!!errors.name}
-            />
-            {errors.name && <CFormFeedback invalid>{errors.name}</CFormFeedback>}
-          </div>
-
-          <div className="mb-3">
-            <CFormLabel htmlFor="email">Email</CFormLabel>
-            <CFormInput
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              invalid={!!errors.email}
-            />
-            {errors.email && <CFormFeedback invalid>{errors.email}</CFormFeedback>}
-          </div>
-
-          {isEditing && (
-            <div className="mb-3 form-check">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="showPassword"
-                checked={showPassword}
-                onChange={() => setShowPassword(!showPassword)}
-              />
-              <label className="form-check-label" htmlFor="showPassword">
-                Cambiar contraseña
-              </label>
-            </div>
-          )}
-
-          {showPassword && (
-            <>
+          <CRow>
+            <CCol md={6}>
               <div className="mb-3">
-                <CFormLabel htmlFor="password">Contraseña</CFormLabel>
-                <CFormInput
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
+                <CFormLabel htmlFor="documentType">Tipo de Documento*</CFormLabel>
+                <CFormSelect
+                  id="documentType"
+                  value={formData.documentType}
                   onChange={handleChange}
-                  invalid={!!errors.password}
-                />
-                {errors.password && <CFormFeedback invalid>{errors.password}</CFormFeedback>}
+                  invalid={!!errors.documentType}
+                >
+                  <option value="">Seleccione...</option>
+                  <option value="cc">Cédula de Ciudadanía</option>
+                  <option value="ce">Cédula de Extranjería</option>
+                  <option value="passport">Pasaporte</option>
+                </CFormSelect>
+                {errors.documentType && (
+                  <CFormFeedback invalid>{errors.documentType}</CFormFeedback>
+                )}
               </div>
-
+            </CCol>
+            <CCol md={6}>
               <div className="mb-3">
-                <CFormLabel htmlFor="confirmPassword">Confirmar Contraseña</CFormLabel>
+                <CFormLabel htmlFor="documentNumber">Número de Documento*</CFormLabel>
                 <CFormInput
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  type="text"
+                  id="documentNumber"
+                  value={formData.documentNumber}
                   onChange={handleChange}
-                  invalid={!!errors.confirmPassword}
+                  invalid={!!errors.documentNumber}
                 />
-                {errors.confirmPassword && <CFormFeedback invalid>{errors.confirmPassword}</CFormFeedback>}
+                {errors.documentNumber && (
+                  <CFormFeedback invalid>{errors.documentNumber}</CFormFeedback>
+                )}
               </div>
-            </>
-          )}
+            </CCol>
+          </CRow>
 
-          <div className="mb-3">
-            <CFormLabel htmlFor="role">Rol</CFormLabel>
-            <CFormSelect
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              invalid={!!errors.role}
-            >
-              <option value="">Seleccione un rol</option>
-              {roles.map(role => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </CFormSelect>
-            {errors.role && <CFormFeedback invalid>{errors.role}</CFormFeedback>}
-          </div>
+          <CRow>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="firstName">Primer Nombre*</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  invalid={!!errors.firstName}
+                />
+                {errors.firstName && (
+                  <CFormFeedback invalid>{errors.firstName}</CFormFeedback>
+                )}
+              </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="middleName">Segundo Nombre</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="middleName"
+                  value={formData.middleName}
+                  onChange={handleChange}
+                />
+              </div>
+            </CCol>
+          </CRow>
+
+          <CRow>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="lastName">Primer Apellido*</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  invalid={!!errors.lastName}
+                />
+                {errors.lastName && (
+                  <CFormFeedback invalid>{errors.lastName}</CFormFeedback>
+                )}
+              </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="secondLastName">Segundo Apellido</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="secondLastName"
+                  value={formData.secondLastName}
+                  onChange={handleChange}
+                />
+              </div>
+            </CCol>
+          </CRow>
+
+          <CRow>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="email">Email*</CFormLabel>
+                <CFormInput
+                  type="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  invalid={!!errors.email}
+                />
+                {errors.email && (
+                  <CFormFeedback invalid>{errors.email}</CFormFeedback>
+                )}
+              </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="roleId">Rol*</CFormLabel>
+                <CFormSelect
+                  id="roleId"
+                  value={formData.roleId}
+                  onChange={handleChange}
+                  invalid={!!errors.roleId}
+                >
+                  <option value="">Seleccione...</option>
+                  {roles.map(role => (
+                    <option key={role.id} value={role.id}>{role.name}</option>
+                  ))}
+                </CFormSelect>
+                {errors.roleId && (
+                  <CFormFeedback invalid>{errors.roleId}</CFormFeedback>
+                )}
+              </div>
+            </CCol>
+          </CRow>
+
+          <CRow>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="employmentType">Tipo de Empleo</CFormLabel>
+                <CFormSelect
+                  id="employmentType"
+                  value={formData.employmentType}
+                  onChange={handleChange}
+                >
+                  <option value="">Seleccione...</option>
+                  <option value="fullTime">Tiempo Completo</option>
+                  <option value="partTime">Medio Tiempo</option>
+                  <option value="contractor">Contratista</option>
+                </CFormSelect>
+              </div>
+            </CCol>
+            <CCol md={6}>
+              <div className="mb-3">
+                <CFormLabel htmlFor="userType">Tipo de Usuario</CFormLabel>
+                <CFormSelect
+                  id="userType"
+                  value={formData.userType}
+                  onChange={handleChange}
+                >
+                  <option value="">Seleccione...</option>
+                  <option value="internal">Interno</option>
+                  <option value="external">Externo</option>
+                </CFormSelect>
+              </div>
+            </CCol>
+          </CRow>
+
+          {!user && (
+            <CRow>
+              <CCol md={12}>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="password">Contraseña*</CFormLabel>
+                  <CFormInput
+                    type="password"
+                    id="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    invalid={!!errors.password}
+                  />
+                  {errors.password && (
+                    <CFormFeedback invalid>{errors.password}</CFormFeedback>
+                  )}
+                </div>
+              </CCol>
+            </CRow>
+          )}
         </CForm>
       </CModalBody>
       <CModalFooter>
@@ -283,7 +332,7 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
           Cancelar
         </CButton>
         <CButton color="primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? <CSpinner size="sm" /> : isEditing ? 'Actualizar' : 'Guardar'}
+          {loading ? <CSpinner size="sm" /> : 'Guardar'}
         </CButton>
       </CModalFooter>
     </CModal>

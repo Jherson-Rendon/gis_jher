@@ -10,14 +10,20 @@ import {
   CFormLabel,
   CFormTextarea,
   CFormCheck,
+  CSpinner,
+  CFormFeedback,
+  CRow,
+  CCol
 } from '@coreui/react';
 
-const RoleFormModal = ({ visible, onClose, onSave, role }) => {
+const RoleFormModal = ({ visible, onClose, onSave, role, availablePermissions = [] }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     permissions: [],
   });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // Actualizar el formulario cuando cambia el rol seleccionado
   useEffect(() => {
@@ -35,7 +41,9 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
         permissions: [],
       });
     }
-  }, [role]);
+    // Limpiar errores al abrir el modal
+    setErrors({});
+  }, [role, visible]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,6 +51,11 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
       ...formData,
       [name]: value,
     });
+
+    // Limpiar error específico cuando el usuario corrige el campo
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handlePermissionChange = (permission) => {
@@ -56,24 +69,55 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre del rol es requerido';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Lista de permisos disponibles (esto podría venir de una API)
-  const availablePermissions = [
-    'users_view',
-    'users_create',
-    'users_edit',
-    'users_delete',
-    'roles_view',
-    'roles_create',
-    'roles_edit',
-    'roles_delete',
-    'settings_view',
-    'settings_edit',
-  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await onSave(formData);
+    } catch (error) {
+      console.error('Error al guardar rol:', error);
+      setErrors(prev => ({
+        ...prev,
+        form: error.message || 'Error al guardar el rol'
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Agrupar permisos por categoría
+  const groupPermissions = () => {
+    const groups = {};
+
+    availablePermissions.forEach(permission => {
+      const category = permission.split('_')[0];
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(permission);
+    });
+
+    return groups;
+  };
+
+  const permissionGroups = groupPermissions();
 
   return (
     <CModal visible={visible} onClose={onClose} size="lg">
@@ -81,6 +125,12 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
         {role ? 'Editar Rol' : 'Crear Nuevo Rol'}
       </CModalHeader>
       <CModalBody>
+        {errors.form && (
+          <div className="alert alert-danger" role="alert">
+            {errors.form}
+          </div>
+        )}
+
         <CForm onSubmit={handleSubmit}>
           <div className="mb-3">
             <CFormLabel htmlFor="name">Nombre del Rol</CFormLabel>
@@ -90,9 +140,11 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              required
+              invalid={!!errors.name}
             />
+            {errors.name && <CFormFeedback invalid>{errors.name}</CFormFeedback>}
           </div>
+
           <div className="mb-3">
             <CFormLabel htmlFor="description">Descripción</CFormLabel>
             <CFormTextarea
@@ -103,20 +155,31 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
               rows={3}
             />
           </div>
+
           <div className="mb-3">
             <CFormLabel>Permisos</CFormLabel>
-            <div className="row">
-              {availablePermissions.map((permission) => (
-                <div className="col-md-6 mb-2" key={permission}>
-                  <CFormCheck
-                    id={`permission-${permission}`}
-                    label={permission.replace('_', ' ').toUpperCase()}
-                    checked={formData.permissions.includes(permission)}
-                    onChange={() => handlePermissionChange(permission)}
-                  />
-                </div>
-              ))}
-            </div>
+
+            {Object.entries(permissionGroups).map(([category, permissions]) => (
+              <div key={category} className="mb-3">
+                <h6 className="text-capitalize">{category}</h6>
+                <CRow>
+                  {permissions.map((permission) => (
+                    <CCol md={6} key={permission} className="mb-2">
+                      <CFormCheck
+                        id={`permission-${permission}`}
+                        label={permission.replace('_', ' ').toUpperCase()}
+                        checked={formData.permissions.includes(permission)}
+                        onChange={() => handlePermissionChange(permission)}
+                      />
+                    </CCol>
+                  ))}
+                </CRow>
+              </div>
+            ))}
+
+            {availablePermissions.length === 0 && (
+              <div className="text-muted">No hay permisos disponibles</div>
+            )}
           </div>
         </CForm>
       </CModalBody>
@@ -124,8 +187,8 @@ const RoleFormModal = ({ visible, onClose, onSave, role }) => {
         <CButton color="secondary" onClick={onClose}>
           Cancelar
         </CButton>
-        <CButton color="primary" onClick={handleSubmit}>
-          Guardar
+        <CButton color="primary" onClick={handleSubmit} disabled={loading}>
+          {loading ? <CSpinner size="sm" /> : 'Guardar'}
         </CButton>
       </CModalFooter>
     </CModal>

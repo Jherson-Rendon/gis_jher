@@ -18,16 +18,12 @@ import { cilBell, cilEnvelopeOpen, cilList, cilMenu, cilMoon, cilSun } from '@co
 
 import { AppHeaderDropdown } from './header/index'
 import { useTheme } from '../contexts/ThemeContext'
+import ApiModeToggler from './ApiModeToggler'
 
 const AppHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
-  const { isDark, setTheme } = useTheme()
-
-  // Función para alternar entre temas claro y oscuro
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark')
-  }
+  const { isDark, toggleTheme } = useTheme()
 
   return (
     <CHeader position="sticky" className={isDark ? 'bg-dark text-white border-dark' : ''}>
@@ -61,6 +57,9 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-3">
+          {/* Botón para cambiar entre API real y mock */}
+          <ApiModeToggler />
+
           {/* Botón para cambiar el tema */}
           <CButton
             color={isDark ? 'light' : 'dark'}
