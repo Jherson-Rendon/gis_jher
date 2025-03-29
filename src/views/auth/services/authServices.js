@@ -1,9 +1,7 @@
 // src/views/auth/services/authServices.js
 import axios from 'axios';
 
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
+const API_URL = 'https://salud-1.onrender.com/salud';
 
 // Configurar interceptor para refrescar token automáticamente
 const setupAxiosInterceptors = () => {
@@ -23,20 +21,21 @@ const setupAxiosInterceptors = () => {
             throw new Error('No refresh token available');
           }
 
-          const response = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
-          const { token, refreshToken: newRefreshToken } = response.data;
+          const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+          const { tokens } = response.data;
 
           // Guardar nuevos tokens
-          localStorage.setItem('token', token);
-          localStorage.setItem('refreshToken', newRefreshToken);
+          localStorage.setItem('accessToken', tokens.accessToken);
+          localStorage.setItem('refreshToken', tokens.refreshToken);
 
           // Actualizar el header de la petición original y reintentarla
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          originalRequest.headers['Authorization'] = `Bearer ${tokens.accessToken}`;
           return axios(originalRequest);
         } catch (refreshError) {
           // Si falla el refresh, logout
-          localStorage.removeItem('token');
+          localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
           window.location.href = '/auth/login';
           return Promise.reject(refreshError);
         }
@@ -50,76 +49,112 @@ const setupAxiosInterceptors = () => {
 // Llamar a la función para configurar los interceptores
 setupAxiosInterceptors();
 
-// Función para registrar un nuevo usuario
-export const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/auth/register`, userData);
-  return response.data;
-};
-
 // Función para iniciar sesión
-export const login = async (email, password) => {
-  const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-  const { token, refreshToken, user } = response.data;
+const login = async (credentials) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/login`, credentials);
+    const userData = response.data;
 
-  // Guardar tokens
-  localStorage.setItem('token', token);
-  localStorage.setItem('refreshToken', refreshToken);
+    // Guardar tokens y datos del usuario
+    localStorage.setItem('accessToken', userData.tokens.accessToken);
+    localStorage.setItem('refreshToken', userData.tokens.refreshToken);
+    localStorage.setItem('user', JSON.stringify({
+      id: userData.id,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      name: `${userData.firstName} ${userData.lastName}`, // Para compatibilidad con el código existente
+      email: userData.email,
+      role: userData.role,
+      modulesAccess: userData.modulesAccess,
+      accessLevels: userData.accessLevels,
+      isActive: userData.isActive
+    }));
 
-  // Configurar header de autorización para futuras peticiones
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Configurar header de autorización para futuras peticiones
+    axios.defaults.headers.common['Authorization'] = `Bearer ${userData.tokens.accessToken}`;
 
-  return response.data;
+    return userData;
+  } catch (error) {
+    console.error('Error en login:', error);
+    throw error.response?.data || { message: 'Error al iniciar sesión' };
+  }
 };
 
 // Función para cerrar sesión
-export const logout = () => {
-  localStorage.removeItem('token');
+const logout = () => {
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
   delete axios.defaults.headers.common['Authorization'];
 };
 
-// Función para solicitar recuperación de contraseña
-export const forgotPassword = async (email) => {
-  const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
-  return response.data;
+// Función para refrescar el token
+const refreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+  const userData = response.data;
+
+  localStorage.setItem('accessToken', userData.tokens.accessToken);
+  localStorage.setItem('refreshToken', userData.tokens.refreshToken);
+
+  return userData.tokens;
 };
 
-// Función para resetear contraseña
-export const resetPassword = async (token, password) => {
-  const response = await axios.post(`${API_URL}/auth/reset-password`, { token, password });
-  return response.data;
-};
+// Función para verificar si el token es válido
+const validateToken = async () => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return false;
 
-// Función para verificar si el usuario está autenticado
-export const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
-};
-
-// Función para obtener el token actual
-export const getToken = () => {
-  return localStorage.getItem('token');
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const response = await axios.get(`${API_URL}/auth/validate`);
+    return response.data;
+  } catch (error) {
+    return false;
+  }
 };
 
 // Función para obtener el usuario actual
-export const getCurrentUser = async () => {
-  const token = getToken();
-  if (!token) return null;
+const getCurrentUser = () => {
+  const user = localStorage.getItem('user');
+  const accessToken = localStorage.getItem('accessToken');
 
-  try {
-    const response = await axios.get(`${API_URL}/auth/me`);
-    return response.data;
-  } catch (error) {
+  if (!user || !accessToken) {
     return null;
+  }
+
+  return JSON.parse(user);
+};
+
+// Función para verificar si el usuario está autenticado
+const isAuthenticated = () => {
+  return !!localStorage.getItem('accessToken');
+};
+
+// Función para obtener roles
+const getRoles = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/roles`);
+    return response.data.map(role => ({
+      id: role.name, // Usar el nombre del rol como ID para compatibilidad
+      name: role.name
+    }));
+  } catch (error) {
+    console.error('Error al obtener roles:', error);
+    throw error;
   }
 };
 
 export default {
-  register,
   login,
   logout,
-  forgotPassword,
-  resetPassword,
+  refreshToken,
+  validateToken,
+  getCurrentUser,
   isAuthenticated,
-  getToken,
-  getCurrentUser
+  getRoles
 };

@@ -21,7 +21,7 @@ const DefaultLayout = () => {
           {/* Contenido de la aplicación */}
           <AppContent />
         </div>
-        <AppFooter />
+        {/* <AppFooter /> */}
       </div>
     </div>
   );

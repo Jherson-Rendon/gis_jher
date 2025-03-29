@@ -37,9 +37,9 @@ const AppSidebar = () => {
       }}
       className={isDark ? 'bg-dark' : ''}
     >
-      <CSidebarBrand className="d-none d-md-flex justify-content-center" to="/">
-        <CIcon className="sidebar-brand-full" icon={cilHospital} height={35} />
-        <span className="sidebar-brand-full ms-2 h4 mb-0">GisoSalud</span>
+      <CSidebarBrand className="d-none d-md-flex justify-content-center mt-3" to="/">
+        <CIcon className="sidebar-brand-full mt-3 " icon={cilHospital} height={38} />
+        <span className="sidebar-brand-full ms-2 h2 mt-3 mb-2">GisoSalud</span>
         <CIcon className="sidebar-brand-narrow" icon={cilHospital} height={35} />
       </CSidebarBrand>
       <CSidebarNav>

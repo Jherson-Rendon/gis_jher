@@ -17,7 +17,7 @@ import {
 } from '@coreui/react';
 import AuthHeader from '../components/AuthHeader';
 import PasswordInput from '../components/PasswordInput';
-import { register } from '../services/authServices';
+// import { register } from '../services/authServices';
 
 const Register = () => {
   const navigate = useNavigate();

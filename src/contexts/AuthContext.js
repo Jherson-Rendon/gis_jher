@@ -1,76 +1,66 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import mockAuthService from '../views/auth/services/mockAuthService'
+// src/contexts/AuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import mockAuthService from '../views/auth/services/mockAuthService';
 import authServices from '../views/auth/services/authServices';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Determinar si usar el servicio mock o real
+  const USE_MOCK_SERVICE = false; // Cambiar a false para usar el servicio real
+  const service = USE_MOCK_SERVICE ? mockAuthService : authServices;
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = mockAuthService.getCurrentUser()
-        console.log('Usuario actual:', currentUser)
-        setUser(currentUser)
+        const currentUser = service.getCurrentUser();
+        console.log('Usuario actual:', currentUser);
+
+        if (currentUser && !USE_MOCK_SERVICE) {
+          // Verificar si el token es válido
+          const isValid = await service.validateToken();
+          if (!isValid) {
+            service.logout();
+            setUser(null);
+            return;
+          }
+        }
+
+        setUser(currentUser);
       } catch (error) {
-        console.error('Error al verificar autenticación:', error)
-        setUser(null)
+        console.error('Error al verificar autenticación:', error);
+        setUser(null);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
-  // Modificar la función login para pruebas
   const login = async (credentials) => {
     try {
-      const userData = await mockAuthService.login(credentials)
-      console.log('Login exitoso, datos de usuario:', userData)
-      setUser(userData)
-      return userData
+      const userData = await service.login(credentials);
+      console.log('Login exitoso, datos de usuario:', userData);
+      setUser(userData);
+      return userData;
     } catch (error) {
-      console.error('Error en login:', error)
-      throw error
+      console.error('Error en login:', error);
+      throw error;
     }
-  }
-
-  // // Modificar la función login para producción
-  // const login = async (credentials) => {
-  //   try {
-  //     // Llamar al servicio real de autenticación
-  //     const response = await authServices.login(credentials.email, credentials.password);
-
-  //     // Extraer datos del usuario y tokens de la respuesta
-  //     const { user, token, refreshToken } = response;
-
-  //     // Establecer el usuario en el estado
-  //     setUser({
-  //       ...user,
-  //       tokens: {
-  //         accessToken: token,
-  //         refreshToken: refreshToken
-  //       }
-  //     });
-
-  //     return user;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // };
-
+  };
 
   const logout = () => {
-    mockAuthService.logout()
-    setUser(null)
+    service.logout();
+    setUser(null);
     // Redireccionar a login después de logout
-    window.location.href = '/auth/login'
-  }
+    window.location.href = '/auth/login';
+  };
 
   const value = {
     user,
@@ -79,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: () => !!user,
     hasRole: (role) => user?.role === role,
-  }
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

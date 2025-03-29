@@ -22,7 +22,12 @@ import { useTheme } from '../contexts/ThemeContext'
 const AppHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
-  const { isDark, toggleTheme } = useTheme()
+  const { isDark, setTheme } = useTheme()
+
+  // Función para alternar entre temas claro y oscuro
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark')
+  }
 
   return (
     <CHeader position="sticky" className={isDark ? 'bg-dark text-white border-dark' : ''}>
@@ -56,7 +61,7 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-3">
-          {/* Reemplazar el import de ThemeToggler con el componente inline */}
+          {/* Botón para cambiar el tema */}
           <CButton
             color={isDark ? 'light' : 'dark'}
             variant="ghost"

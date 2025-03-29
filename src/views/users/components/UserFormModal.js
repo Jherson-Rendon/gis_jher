@@ -16,6 +16,7 @@ import {
   CSpinner
 } from '@coreui/react';
 import mockAuthService from '../../auth/services/mockAuthService';
+import authServices from '../../auth/services/authServices';
 
 const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin }) => {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(!isEditing);
 
-  // Cargar roles disponibles
+  //Cargar roles disponibles
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -47,6 +48,25 @@ const UserFormModal = ({ visible, onClose, onSave, user, isEditing, isSuperAdmin
 
     fetchRoles();
   }, [isSuperAdmin]);
+
+  // Modificar la función fetchRoles en el useEffect
+// useEffect(() => {
+//   const fetchRoles = async () => {
+//     try {
+//       // Usar el servicio real en lugar del mock
+//       const availableRoles = await authServices.getRoles();
+//       // Si no es super admin, filtrar el rol SUPER_ADMIN
+//       const filteredRoles = isSuperAdmin
+//         ? availableRoles
+//         : availableRoles.filter(role => role.id !== 'superAdmin');
+//       setRoles(filteredRoles);
+//     } catch (error) {
+//       console.error('Error al cargar roles:', error);
+//     }
+//   };
+
+//   fetchRoles();
+// }, [isSuperAdmin]);
 
   // Cargar datos del usuario si está en modo edición
   useEffect(() => {

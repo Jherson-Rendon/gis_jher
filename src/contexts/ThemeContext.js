@@ -1,5 +1,5 @@
 // src/contexts/ThemeContext.js
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorModes } from '@coreui/react';
 
 const ThemeContext = createContext();
@@ -7,14 +7,36 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
+  // Usar el hook de CoreUI para manejar el tema
+  const { colorMode, setColorMode } = useColorModes();
+  const [isDark, setIsDark] = useState(false);
+
+  // Función para establecer el tema y guardarlo en localStorage
+  const setTheme = (theme) => {
+    // Guardar en localStorage para persistencia entre sesiones
+    localStorage.setItem('user-theme-preference', theme);
+    // Actualizar el tema en CoreUI
+    setColorMode(theme);
+    // Actualizar el estado local
+    setIsDark(theme === 'dark');
+    // Aplicar clase al body para temas globales
+    document.body.classList.toggle('dark-theme', theme === 'dark');
+  };
+
+  // Cargar la preferencia de tema al iniciar
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('user-theme-preference');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
 
   // Proporcionar valores y funciones del tema
   const value = {
     theme: colorMode,
-    setTheme: setColorMode,
-    isDark: colorMode === 'dark',
-    isLight: colorMode === 'light',
+    setTheme,
+    isDark,
+    isLight: !isDark,
     isAuto: colorMode === 'auto',
   };
 

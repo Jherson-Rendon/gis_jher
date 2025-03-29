@@ -1,6 +1,6 @@
 // src/_nav.js
-import React from 'react'
-import CIcon from '@coreui/icons-react'
+import React from 'react';
+import CIcon from '@coreui/icons-react';
 import {
   cilSpeedometer,
   cilPeople,
@@ -13,9 +13,9 @@ import {
   cilBeaker,
   cilDollar,
   cilCalendar,
-} from '@coreui/icons'
-import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
-import { MODULES } from './views/dashboard/SubsystemCards'
+} from '@coreui/icons';
+import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react';
+import { MODULES } from './views/dashboard/SubsystemCards';
 
 // Función para generar el menú según el rol del usuario
 const generateNav = (user, setActiveModule) => {
@@ -28,11 +28,11 @@ const generateNav = (user, setActiveModule) => {
       icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
       onClick: () => setActiveModule(null) // Resetear el módulo activo al ir al dashboard principal
     },
-  ]
+  ];
 
   // Si no hay usuario autenticado, devolver solo el menú base
   if (!user || !user.role) {
-    return baseNav
+    return baseNav;
   }
 
   // Función para crear un elemento de navegación para un módulo
@@ -48,6 +48,19 @@ const generateNav = (user, setActiveModule) => {
       onClick: () => setActiveModule(moduleId) // Esto ahora usará changeActiveModule
     };
   };
+
+  // Mapeo de roles de la API a roles del sistema
+  const roleMapping = {
+    'superAdmin': 'SUPER_ADMIN',
+    'Admin': 'ADMIN',
+    'Medico': 'MEDICO',
+    'Enfermera': 'ENFERMERA',
+    'Laboratorio': 'LABORATORIO',
+    'Contabilidad': 'CONTABILIDAD',
+    'Recepcion': 'RECEPCION'
+  };
+
+  const userRole = roleMapping[user.role] || user.role;
 
   // Menús específicos por rol
   const roleMenus = {
@@ -99,10 +112,10 @@ const generateNav = (user, setActiveModule) => {
     RECEPCION: [
       createModuleNavItem('recepcion'),
     ],
-  }
+  };
 
   // Filtrar elementos nulos y elementos vacíos
-  const roleMenu = roleMenus[user.role] || [];
+  const roleMenu = roleMenus[userRole] || [];
   const filteredRoleMenu = roleMenu.filter(item => {
     if (!item) return false;
     // Si es un grupo, verificar que tenga elementos
@@ -113,13 +126,13 @@ const generateNav = (user, setActiveModule) => {
   });
 
   // Agregar menús específicos del rol al menú base
-  return [...baseNav, ...filteredRoleMenu]
-}
+  return [...baseNav, ...filteredRoleMenu];
+};
 
 // Exportar una función que devuelve el menú según el usuario y la función setActiveModule
 export const getNav = (user, setActiveModule) => {
-  return generateNav(user, setActiveModule)
-}
+  return generateNav(user, setActiveModule);
+};
 
 // Exportar un menú por defecto para compatibilidad con el código existente
 const _nav = [
@@ -141,6 +154,6 @@ const _nav = [
     to: '/titular',
     icon: <CIcon icon={cilHome} customClassName="nav-icon" />,
   },
-]
+];
 
-export default _nav
+export default _nav;
